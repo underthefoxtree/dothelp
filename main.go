@@ -29,7 +29,7 @@ const (
 	quitting programState = iota
 	mainMenu
 	projectCreationMain
-	buildTools
+	buildToolsMain
 )
 
 type model struct {
@@ -53,8 +53,8 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.state {
 
-	// * Main Menu
-	case mainMenu:
+	// * Main Menu, Build Tools Main
+	case mainMenu, buildToolsMain:
 		switch msg := msg.(type) {
 
 		case tea.KeyMsg:
@@ -76,8 +76,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 			case "enter", " ":
-				if m.cursor != len(m.options)-1 {
-					return m, tea.Quit
+				if m.options[m.cursor] == "Build Tools" {
+					m.state = buildToolsMain
+					m.options = []string{
+						"Quick Build",
+						"Release Build",
+						"Complex Build",
+						"Exit",
+					}
+					m.cursor = 0
+					return m, nil
 				} else {
 					m.state = quitting
 					return m, tea.Quit
@@ -100,8 +108,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	switch m.state {
 
-	// * Main Menu
-	case mainMenu:
+	// * Main Menu, Build Tools Main
+	case mainMenu, buildToolsMain:
 		s := titleStyle.Render("DOTHELP") + "\n\n"
 
 		for i, choice := range m.options {
