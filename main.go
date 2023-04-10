@@ -5,6 +5,22 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	lipgloss "github.com/charmbracelet/lipgloss"
+)
+
+var (
+	titleStyle        = lipgloss.NewStyle().Bold(true).PaddingLeft(2)
+	itemStyle         = lipgloss.NewStyle()
+	selectedItemStyle = lipgloss.NewStyle().Foreground(lipgloss.CompleteColor{
+		TrueColor: "#8b8be1",
+		ANSI256:   "62",
+		ANSI:      "5",
+	})
+	redItemStyle = lipgloss.NewStyle().Foreground(lipgloss.CompleteColor{
+		TrueColor: "#ff7f7f",
+		ANSI256:   "203",
+		ANSI:      "1",
+	})
 )
 
 type programState int
@@ -86,15 +102,21 @@ func (m model) View() string {
 
 	// * Main Menu
 	case mainMenu:
-		s := "[---dothelp---]\n\n"
+		s := titleStyle.Render("DOTHELP") + "\n\n"
 
 		for i, choice := range m.options {
-			cursor := " "
+			cursor := "  "
+			style := itemStyle
 			if i == m.cursor {
-				cursor = ">"
+				cursor = "> "
+				style = selectedItemStyle
+
+				if choice == "Exit" {
+					style = redItemStyle
+				}
 			}
 
-			s += fmt.Sprintf("%s %s\n", cursor, choice)
+			s += style.Render(fmt.Sprintf("%s%s", cursor, choice)) + "\n"
 		}
 
 		s += "\nPress q to quit."
