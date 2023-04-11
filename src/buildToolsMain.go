@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type buildToolsMainModel struct {
@@ -11,7 +12,6 @@ type buildToolsMainModel struct {
 	cursor  int
 }
 
-// Test
 func createBuildToolsMainModel() buildToolsMainModel {
 	return buildToolsMainModel{
 		options: []string{
@@ -22,6 +22,16 @@ func createBuildToolsMainModel() buildToolsMainModel {
 		},
 		cursor: 0,
 	}
+}
+
+func (m buildToolsMainModel) getOptionStyle() lipgloss.Style {
+	style := selectedItemStyle
+
+	if m.options[m.cursor] == "Exit" {
+		style = redItemStyle
+	}
+
+	return style
 }
 
 func (m buildToolsMainModel) Init() tea.Cmd {
@@ -49,11 +59,11 @@ func (m buildToolsMainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter", " ":
-			if m.options[m.cursor] == "Build Tools" {
-				return createBuildToolsMainModel(), nil
-			} else {
-				return m, tea.Quit
-			}
+			return createExitModel(
+					fmt.Sprintf(
+						"You selected: %s",
+						m.getOptionStyle().Render(m.options[m.cursor]))),
+				tea.Quit
 		}
 	}
 
@@ -68,17 +78,13 @@ func (m buildToolsMainModel) View() string {
 		style := itemStyle
 		if i == m.cursor {
 			cursor = "> "
-			style = selectedItemStyle
-
-			if choice == "Exit" {
-				style = redItemStyle
-			}
+			style = m.getOptionStyle()
 		}
 
-		s += style.Render(fmt.Sprintf("%s%s", cursor, choice)) + "\n"
+		s += cursor + style.Render(choice) + "\n"
 	}
 
-	s += "\nPress q to quit."
+	s += helpStyle.Render("\nPress q to quit.")
 
 	return s
 }

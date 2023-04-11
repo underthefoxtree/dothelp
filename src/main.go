@@ -22,6 +22,12 @@ var (
 		ANSI256:   "203",
 		ANSI:      "1",
 	})
+
+	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.CompleteColor{
+		TrueColor: "#3c3c3c",
+		ANSI256:   "16",
+		ANSI:      "0",
+	})
 )
 
 // * Setup
