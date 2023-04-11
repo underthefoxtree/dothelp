@@ -25,10 +25,6 @@ var (
 )
 
 // * Models
-type model struct {
-	current tea.Model
-}
-
 type mainMenuModel struct {
 	options []string
 	cursor  int
@@ -39,17 +35,27 @@ type buildToolsMainModel struct {
 	cursor  int
 }
 
-// * Main Model
-func (m model) Init() tea.Cmd {
-	return nil
+type exitModel struct {
+	exitMessage string
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m.current.Update(msg)
+// * Exit Model
+func createExitModel(msg string) exitModel {
+	return exitModel{
+		exitMessage: msg,
+	}
 }
 
-func (m model) View() string {
-	return m.current.View()
+func (m exitModel) Init() tea.Cmd {
+	return tea.Quit
+}
+
+func (m exitModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m, nil
+}
+
+func (m exitModel) View() string {
+	return m.exitMessage + "\n"
 }
 
 // * Main Menu
@@ -65,7 +71,7 @@ func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "ctrl+c", "q":
-			return m, tea.Quit
+			return createExitModel("Exiting..."), tea.Quit
 
 		case "up", "k":
 			if m.cursor > 0 {
@@ -185,12 +191,10 @@ func (m buildToolsMainModel) View() string {
 }
 
 // * Setup
-func initialModel() model {
-	return model{
-		current: mainMenuModel{
-			options: []string{"New Project", "Build Tools", "Exit"},
-			cursor:  0,
-		},
+func initialModel() mainMenuModel {
+	return mainMenuModel{
+		options: []string{"New Project", "Build Tools", "Exit"},
+		cursor:  0,
 	}
 }
 
