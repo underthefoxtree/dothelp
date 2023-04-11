@@ -8,6 +8,7 @@ import (
 	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
+// * Styles
 var (
 	titleStyle        = lipgloss.NewStyle().Bold(true).PaddingLeft(2)
 	itemStyle         = lipgloss.NewStyle()
@@ -23,121 +24,173 @@ var (
 	})
 )
 
-type programState int
-
-const (
-	quitting programState = iota
-	mainMenu
-	projectCreationMain
-	buildToolsMain
-)
-
+// * Models
 type model struct {
-	state   programState
+	current tea.Model
+}
+
+type mainMenuModel struct {
 	options []string
 	cursor  int
 }
 
-func initialModel() model {
-	return model{
-		state:   mainMenu,
-		options: []string{"New Project", "Build Tools", "Exit"},
-		cursor:  0,
-	}
+type buildToolsMainModel struct {
+	options []string
+	cursor  int
 }
 
+// * Main Model
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch m.state {
-
-	// * Main Menu, Build Tools Main
-	case mainMenu, buildToolsMain:
-		switch msg := msg.(type) {
-
-		case tea.KeyMsg:
-
-			switch msg.String() {
-
-			case "ctrl+c", "q":
-				m.state = quitting
-				return m, tea.Quit
-
-			case "up", "k":
-				if m.cursor > 0 {
-					m.cursor--
-				}
-
-			case "down", "j":
-				if m.cursor < len(m.options)-1 {
-					m.cursor++
-				}
-
-			case "enter", " ":
-				if m.options[m.cursor] == "Build Tools" {
-					m.state = buildToolsMain
-					m.options = []string{
-						"Quick Build",
-						"Release Build",
-						"Complex Build",
-						"Exit",
-					}
-					m.cursor = 0
-					return m, nil
-				} else {
-					m.state = quitting
-					return m, tea.Quit
-				}
-			}
-		}
-
-		return m, nil
-
-	// * Quit
-	case quitting:
-		return m, tea.Quit
-
-	// * Default
-	default:
-		return m, tea.Quit
-	}
+	return m.current.Update(msg)
 }
 
 func (m model) View() string {
-	switch m.state {
+	return m.current.View()
+}
 
-	// * Main Menu, Build Tools Main
-	case mainMenu, buildToolsMain:
-		s := titleStyle.Render("DOTHELP") + "\n\n"
+// * Main Menu
+func (m mainMenuModel) Init() tea.Cmd {
+	return nil
+}
 
-		for i, choice := range m.options {
-			cursor := "  "
-			style := itemStyle
-			if i == m.cursor {
-				cursor = "> "
-				style = selectedItemStyle
+func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
 
-				if choice == "Exit" {
-					style = redItemStyle
-				}
+	case tea.KeyMsg:
+
+		switch msg.String() {
+
+		case "ctrl+c", "q":
+			return m, tea.Quit
+
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
 			}
 
-			s += style.Render(fmt.Sprintf("%s%s", cursor, choice)) + "\n"
+		case "down", "j":
+			if m.cursor < len(m.options)-1 {
+				m.cursor++
+			}
+
+		case "enter", " ":
+			if m.options[m.cursor] == "Build Tools" {
+				return createBuildToolsMainModel(), nil
+			} else {
+				return m, tea.Quit
+			}
+		}
+	}
+
+	return m, nil
+}
+
+func (m mainMenuModel) View() string {
+	s := titleStyle.Render("DOTHELP") + "\n\n"
+
+	for i, choice := range m.options {
+		cursor := "  "
+		style := itemStyle
+		if i == m.cursor {
+			cursor = "> "
+			style = selectedItemStyle
+
+			if choice == "Exit" {
+				style = redItemStyle
+			}
 		}
 
-		s += "\nPress q to quit."
+		s += style.Render(fmt.Sprintf("%s%s", cursor, choice)) + "\n"
+	}
 
-		return s
+	s += "\nPress q to quit."
 
-	// * Quit
-	case quitting:
-		return "Exiting dothelp...\n"
+	return s
+}
 
-	// * Default
-	default:
-		return ""
+// * Build Tools Main
+func createBuildToolsMainModel() buildToolsMainModel {
+	return buildToolsMainModel{
+		options: []string{
+			"Quick Build",
+			"Release Build",
+			"Complex Build",
+			"Exit",
+		},
+		cursor: 0,
+	}
+}
+
+func (m buildToolsMainModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m buildToolsMainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	case tea.KeyMsg:
+
+		switch msg.String() {
+
+		case "ctrl+c", "q":
+			return m, tea.Quit
+
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+
+		case "down", "j":
+			if m.cursor < len(m.options)-1 {
+				m.cursor++
+			}
+
+		case "enter", " ":
+			if m.options[m.cursor] == "Build Tools" {
+				return createBuildToolsMainModel(), nil
+			} else {
+				return m, tea.Quit
+			}
+		}
+	}
+
+	return m, nil
+}
+
+func (m buildToolsMainModel) View() string {
+	s := titleStyle.Render("DOTHELP") + "\n\n"
+
+	for i, choice := range m.options {
+		cursor := "  "
+		style := itemStyle
+		if i == m.cursor {
+			cursor = "> "
+			style = selectedItemStyle
+
+			if choice == "Exit" {
+				style = redItemStyle
+			}
+		}
+
+		s += style.Render(fmt.Sprintf("%s%s", cursor, choice)) + "\n"
+	}
+
+	s += "\nPress q to quit."
+
+	return s
+}
+
+// * Setup
+func initialModel() model {
+	return model{
+		current: mainMenuModel{
+			options: []string{"New Project", "Build Tools", "Exit"},
+			cursor:  0,
+		},
 	}
 }
 
