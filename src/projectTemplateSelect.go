@@ -80,10 +80,6 @@ func (m templateSelectModel) Init() tea.Cmd {
 
 func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
-	case tea.WindowSizeMsg:
-		m.paginator.PerPage = msg.Height - 4
-
 	case tea.KeyMsg:
 
 		switch msg.String() {
