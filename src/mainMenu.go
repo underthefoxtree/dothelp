@@ -47,9 +47,12 @@ func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter", " ":
-			if m.options[m.cursor] == "Build Tools" {
+			switch m.options[m.cursor] {
+			case "New Project":
+				return createTemplateSelectModel(), nil
+			case "Build Tools":
 				return createBuildToolsMainModel(), nil
-			} else {
+			default:
 				return createExitModel(
 						fmt.Sprintf(
 							"You selected: %s",
