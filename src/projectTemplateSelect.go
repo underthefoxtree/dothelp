@@ -5,23 +5,37 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/paginator"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 type templateSelectModel struct {
 	options   []template
 	cursor    int
 	paginator paginator.Model
+	mode      mode
+	filter    string
+	input     textinput.Model
+	filtered  []string
 }
 
 type template struct {
 	name string
 	id   string
 }
+
+type mode int
+
+const (
+	normal mode = iota
+	search
+)
 
 func createTemplateSelectModel() templateSelectModel {
 	// Run dotnet new --list and capture output
@@ -67,62 +81,151 @@ func createTemplateSelectModel() templateSelectModel {
 	p.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
 	p.SetTotalPages(len(templates))
 
+	ti := textinput.New()
+	ti.Placeholder = "Filter"
+	ti.CharLimit = 60
+	ti.Width = 30
+	ti.Prompt = "  "
+
 	return templateSelectModel{
 		options:   templates,
 		cursor:    0,
 		paginator: p,
+		mode:      normal,
+		input:     ti,
 	}
 }
 
 func (m templateSelectModel) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	switch m.mode {
+	case normal:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
 
-		switch msg.String() {
+			switch msg.String() {
 
-		case "ctrl+c", "q":
-			return createExitModel("Exiting..."), tea.Quit
+			case "ctrl+c", "q":
+				return createExitModel("Exiting..."), tea.Quit
 
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			} else if m.paginator.Page != 0 {
-				m.cursor = m.paginator.PerPage
-				m.paginator.Page--
-			}
+			case "up", "k":
+				if m.cursor > 0 {
+					m.cursor--
+				} else if m.paginator.Page != 0 {
+					m.cursor = m.paginator.PerPage
+					m.paginator.Page--
+				}
 
-		case "down", "j":
-			if m.cursor < m.paginator.ItemsOnPage(len(m.options))-1 {
-				m.cursor++
-			} else if m.paginator.Page != m.paginator.TotalPages-1 {
+			case "down", "j":
+				if m.cursor < m.paginator.ItemsOnPage(len(m.options))-1 {
+					m.cursor++
+				} else if m.paginator.Page != m.paginator.TotalPages-1 {
+					m.cursor = 0
+					m.paginator.Page++
+				}
+
+			case "left", "right", "h", "l":
 				m.cursor = 0
-				m.paginator.Page++
+
+			case "/":
+				m.input.Focus()
+				m.mode = search
+
+			case "enter", " ":
+				return createExitModel(
+						fmt.Sprintf(
+							"You selected: %s",
+							selectedItemStyle.Render(m.options[m.cursor+m.paginator.Page*m.paginator.PerPage].name))),
+					tea.Quit
 			}
-
-		case "left", "right", "h", "l":
-			m.cursor = 0
-
-		case "enter", " ":
-			return createExitModel(
-					fmt.Sprintf(
-						"You selected: %s",
-						selectedItemStyle.Render(m.options[m.cursor+m.paginator.Page*m.paginator.PerPage].name))),
-				tea.Quit
 		}
+
+		var cmd tea.Cmd
+		m.paginator, cmd = m.paginator.Update(msg)
+
+		return m, cmd
+
+	case search:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+
+			case "ctrl+c", "q":
+				return createExitModel("Exiting..."), tea.Quit
+
+			case "up", "k":
+				if m.cursor > 0 {
+					m.cursor--
+				} else if m.paginator.Page != 0 {
+					m.cursor = m.paginator.PerPage
+					m.paginator.Page--
+				}
+
+			case "down", "j":
+				if m.cursor < m.paginator.ItemsOnPage(len(m.filtered))-1 {
+					m.cursor++
+				} else if m.paginator.Page != m.paginator.TotalPages-1 {
+					m.cursor = 0
+					m.paginator.Page++
+				}
+
+			case "left", "right", "h", "l":
+				m.cursor = 0
+
+			case "/":
+				m.input.Blur()
+				m.input.Reset()
+				m.mode = normal
+
+			case "enter", " ":
+				return createExitModel(
+						fmt.Sprintf(
+							"You selected: %s",
+							selectedItemStyle.Render(m.filtered[m.cursor+m.paginator.Page*m.paginator.PerPage]))),
+					tea.Quit
+			}
+		}
+
+		var l []string
+
+		for _, choice := range m.options {
+			l = append(l, fmt.Sprintf("%s (%s)", choice.name, choice.id))
+		}
+
+		f := fuzzy.RankFindNormalizedFold(m.filter, l)
+		sort.Sort(f)
+
+		m.filtered = []string{}
+
+		for _, i := range f {
+			m.filtered = append(m.filtered, i.Target)
+		}
+
+		le := len(m.filtered)
+
+		if m.cursor > le {
+			m.cursor = le - 1
+		}
+
+		var cmd tea.Cmd
+		m.paginator.SetTotalPages(len(m.filtered))
+		m.paginator, _ = m.paginator.Update(msg)
+		m.input, cmd = m.input.Update(msg)
+
+		m.filter = m.input.Value()
+
+		return m, cmd
+
+	default:
+		return m, nil
 	}
-
-	var cmd tea.Cmd
-	m.paginator, cmd = m.paginator.Update(msg)
-
-	return m, cmd
 }
 
-func (m templateSelectModel) View() string {
-	s := titleStyle.Render("DOTHELP") + "\n\n"
+func (m templateSelectModel) RenderListNormal() string {
+	var s string
 
 	start, end := m.paginator.GetSliceBounds(len(m.options))
 
@@ -134,11 +237,48 @@ func (m templateSelectModel) View() string {
 			style = selectedItemStyle
 		}
 
-		s += fmt.Sprintf("%s%s (%s)\n", cursor, style.Render(choice.name), helpStyle.Render(choice.id))
+		s += fmt.Sprintf("%s%s (%s)\n", cursor, style.Render(choice.name), style.Render(choice.id))
+	}
+
+	return s
+}
+
+func (m templateSelectModel) RenderListFiltered() string {
+	var s string
+
+	start, end := m.paginator.GetSliceBounds(len(m.filtered))
+
+	for i, choice := range m.filtered[start:end] {
+		cursor := "  "
+		style := itemStyle
+		if i == m.cursor {
+			cursor = "> "
+			style = selectedItemStyle
+		}
+
+		s += fmt.Sprintf("%s%s\n", cursor, style.Render(choice))
+	}
+
+	return s
+}
+
+func (m templateSelectModel) View() string {
+	s := titleStyle.Render("DOTHELP") + "\n\n"
+
+	if m.mode == search {
+		s += m.input.View() + "\n"
+
+		if len(m.filter) != 0 {
+			s += m.RenderListFiltered()
+		} else {
+			s += m.RenderListNormal()
+		}
+	} else {
+		s += m.RenderListNormal()
 	}
 
 	s += "\n" + m.paginator.View()
-	s += helpStyle.Render("\nPress q to quit.")
+	s += helpStyle.Render("\nPress q to quit, / to filter.")
 
 	return s
 }
