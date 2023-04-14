@@ -156,7 +156,7 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "ctrl+c", "q":
 				return createExitModel("Exiting..."), tea.Quit
 
-			case "up", "k":
+			case "up":
 				if m.cursor > 0 {
 					m.cursor--
 				} else if m.paginator.Page != 0 {
@@ -164,7 +164,7 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.paginator.Page--
 				}
 
-			case "down", "j":
+			case "down":
 				if m.cursor < m.paginator.ItemsOnPage(len(m.filtered))-1 {
 					m.cursor++
 				} else if m.paginator.Page != m.paginator.TotalPages-1 {
@@ -175,7 +175,7 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "left", "right", "h", "l":
 				m.cursor = 0
 
-			case "/":
+			case "/", "esc":
 				m.input.Blur()
 				m.input.Reset()
 				m.mode = normal
@@ -186,6 +186,9 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							"You selected: %s",
 							selectedItemStyle.Render(m.filtered[m.cursor+m.paginator.Page*m.paginator.PerPage]))),
 					tea.Quit
+
+			default:
+				m.paginator.Page = 0
 			}
 		}
 
@@ -204,10 +207,10 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.filtered = append(m.filtered, i.Target)
 		}
 
-		le := len(m.filtered)
+		le := len(m.filtered) - 1
 
 		if m.cursor > le {
-			m.cursor = le - 1
+			m.cursor = le
 		}
 
 		var cmd tea.Cmd
