@@ -218,14 +218,14 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cursor = le
 		}
 
-		var cmd tea.Cmd
+		cmds := make([]tea.Cmd, 2)
 		m.paginator.SetTotalPages(len(m.filtered))
-		m.paginator, _ = m.paginator.Update(msg)
-		m.input, cmd = m.input.Update(msg)
+		m.paginator, cmds[0] = m.paginator.Update(msg)
+		m.input, cmds[1] = m.input.Update(msg)
 
 		m.filter = m.input.Value()
 
-		return m, cmd
+		return m, tea.Batch(cmds...)
 
 	default:
 		return m, nil
