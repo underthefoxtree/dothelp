@@ -22,6 +22,11 @@ var (
 		ANSI256:   "203",
 		ANSI:      "1",
 	})
+	greenItemStyle = lipgloss.NewStyle().Foreground(lipgloss.CompleteColor{
+		TrueColor: "#3cb371",
+		ANSI256:   "77",
+		ANSI:      "2",
+	})
 
 	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"})
 )
