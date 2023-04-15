@@ -21,6 +21,7 @@ func createProjectCreationModel(name string, id string) projectCreationModel {
 	tiName := textinput.New()
 	tiOut := textinput.New()
 
+	// Regex to filter non displayable chars
 	name = strings.ReplaceAll(name, "\u00a0", " ")
 	re := regexp.MustCompile("[^\x20-\x7E]+")
 	name = re.ReplaceAllString(name, "")
@@ -54,7 +55,7 @@ func (m projectCreationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return createExitModel("Exiting..."), tea.Quit
 
-		case "up", "shift+tab":
+		case "up", "shift+tab", "left":
 			switch m.cursor {
 			case 0:
 				m.cursor = 3
@@ -70,7 +71,7 @@ func (m projectCreationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor--
 			}
 
-		case "down", "tab":
+		case "down", "tab", "right":
 			switch m.cursor {
 			case 0:
 				m.cursor++
