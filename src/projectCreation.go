@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"regexp"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type projectCreationModel struct {
@@ -99,16 +102,24 @@ func (m projectCreationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 2:
 				name, dir := m.templateName, "./"
 
-				if m.outInput.Value() != "" {
-					dir = m.outInput.Value()
-				}
 				if m.nameInput.Value() != "" {
 					name = m.nameInput.Value()
 				}
+				if m.outInput.Value() != "" {
+					dir = m.outInput.Value()
+				} else {
+					dir += name
+				}
 
-				return createExitModel(
-					fmt.Sprintf("Creating %s in %s", name, dir),
-				), tea.Quit
+				s := spinner.New()
+
+				s.Spinner = spinner.MiniDot
+				s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+
+				return createSingleCommandModel(
+					exec.Command("dotnet", "new", m.templateId, "-o", dir, "-n", name),
+					greenItemStyle.Render(fmt.Sprintf("Successfully created project %s in %s.", name, dir)),
+					s), s.Tick
 			case 3:
 				return createExitModel("Exiting..."), tea.Quit
 			}

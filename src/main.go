@@ -32,7 +32,7 @@ var (
 )
 
 // * Setup
-func initialModel() mainMenuModel {
+func initialModel() tea.Model {
 	return mainMenuModel{
 		options: []string{"New Project", "Build Tools", "Exit"},
 		cursor:  0,

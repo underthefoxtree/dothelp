@@ -186,8 +186,8 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				i := strings.IndexRune(s, '(')
 
 				new := createProjectCreationModel(
-					strings.TrimSpace(s[:i-1]),
-					strings.TrimSpace(s[i:strings.LastIndex(s, ")")-1]),
+					strings.TrimSpace(s[:i]),
+					strings.TrimSpace(s[i+1:strings.LastIndex(s, ")")]),
 				)
 
 				return new, nil
