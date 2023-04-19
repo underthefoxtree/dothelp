@@ -1,0 +1,10 @@
+-s dir 
+--name dothelp
+--license mit
+--version 0.0.1
+--architecture all
+--description "A helper utility for the dotnet CLI"
+--url "https://github.com/underthefoxtree/dothelp"
+--maintainer "underthefoxtree" 
+
+dothelp=/usr/bin/dothelp
