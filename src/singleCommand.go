@@ -3,10 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type singleCommandModel struct {
@@ -20,7 +22,12 @@ type cmdOut struct {
 	buff []byte
 }
 
-func createSingleCommandModel(cmd *exec.Cmd, msg string, s spinner.Model) singleCommandModel {
+func createSingleCommandModel(cmd *exec.Cmd, msg string) (singleCommandModel, tea.Cmd) {
+	s := spinner.New()
+
+	s.Spinner = spinner.MiniDot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+
 	ch := make(chan cmdOut)
 
 	// Start console command
@@ -42,7 +49,11 @@ func createSingleCommandModel(cmd *exec.Cmd, msg string, s spinner.Model) single
 		spinner:    s,
 		successMsg: msg,
 		ch:         ch,
-	}
+	}, s.Tick
+}
+
+func clearScreen() string {
+	return "\r\033[2K\x1b[1A\r\033[2K\x1b[1A\r\033[2K\x1b[1A\r\033[2K\x1b[1A\r"
 }
 
 func (m singleCommandModel) Init() tea.Cmd {
@@ -53,9 +64,8 @@ func (m singleCommandModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	select {
 	case cmd := <-m.ch:
 		if cmd.err != nil {
-			return createExitModel(
-				fmt.Sprint(redItemStyle.Render("\u274c An error occured! "), "Exit log:\n\n", string(cmd.buff)),
-			), tea.Quit
+			fmt.Print(clearScreen(), redItemStyle.Render("\u274c An error occured! "), "Exit log:\n\n", string(cmd.buff))
+			os.Exit(1)
 		}
 		return createExitModel(greenItemStyle.Render("\u2705", m.successMsg)), tea.Quit
 

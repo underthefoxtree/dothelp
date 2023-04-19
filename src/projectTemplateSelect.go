@@ -137,10 +137,7 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter", " ":
 				t := m.options[m.cursor+m.paginator.Page*m.paginator.PerPage]
 
-				return createProjectCreationModel(
-					t.name,
-					t.id,
-				), nil
+				return createProjectCreationModel(t.name, t.id)
 			}
 		}
 
@@ -185,12 +182,10 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				s := m.filtered[m.cursor+m.paginator.Page*m.paginator.PerPage]
 				i := strings.IndexRune(s, '(')
 
-				new := createProjectCreationModel(
+				return createProjectCreationModel(
 					strings.TrimSpace(s[:i]),
 					strings.TrimSpace(s[i+1:strings.LastIndex(s, ")")]),
 				)
-
-				return new, nil
 
 			default:
 				m.paginator.Page = 0

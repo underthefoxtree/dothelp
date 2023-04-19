@@ -6,10 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type projectCreationModel struct {
@@ -20,7 +18,7 @@ type projectCreationModel struct {
 	cursor       int
 }
 
-func createProjectCreationModel(name string, id string) projectCreationModel {
+func createProjectCreationModel(name string, id string) (projectCreationModel, tea.Cmd) {
 	tiName := textinput.New()
 	tiOut := textinput.New()
 
@@ -41,7 +39,7 @@ func createProjectCreationModel(name string, id string) projectCreationModel {
 		templateId:   id,
 		nameInput:    tiName,
 		outInput:     tiOut,
-	}
+	}, textinput.Blink
 }
 
 func (m projectCreationModel) Init() tea.Cmd {
@@ -111,15 +109,9 @@ func (m projectCreationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					dir += name
 				}
 
-				s := spinner.New()
-
-				s.Spinner = spinner.MiniDot
-				s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-
 				return createSingleCommandModel(
 					exec.Command("dotnet", "new", m.templateId, "-o", dir, "-n", name),
-					greenItemStyle.Render(fmt.Sprintf("Successfully created project %s in %s.", name, dir)),
-					s), s.Tick
+					greenItemStyle.Render(fmt.Sprintf("Successfully created project %s in %s.", name, dir)))
 			case 3:
 				return createExitModel("Exiting..."), tea.Quit
 			}
