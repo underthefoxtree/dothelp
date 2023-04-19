@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -59,11 +60,18 @@ func (m buildToolsMainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter", " ":
+			switch m.cursor {
+			case 0:
+				return createSingleCommandModel(exec.Command("dotnet", "build"), "Build succeeded")
+			case 1:
+				return createSingleCommandModel(exec.Command("dotnet", "build", "-c", "Release"), "Release build succeeded.")
+			case 2:
+				return createExitModel("Complex builds aren't yet implemented.")
+			}
 			return createExitModel(
-					fmt.Sprintf(
-						"You selected: %s",
-						m.getOptionStyle().Render(m.options[m.cursor]))),
-				tea.Quit
+				fmt.Sprintf(
+					"You selected: %s",
+					m.getOptionStyle().Render(m.options[m.cursor])))
 		}
 	}
 

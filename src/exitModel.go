@@ -8,10 +8,10 @@ type exitModel struct {
 	exitMessage string
 }
 
-func createExitModel(msg string) exitModel {
+func createExitModel(msg string) (exitModel, tea.Cmd) {
 	return exitModel{
 		exitMessage: msg,
-	}
+	}, tea.Quit
 }
 
 func (m exitModel) Init() tea.Cmd {

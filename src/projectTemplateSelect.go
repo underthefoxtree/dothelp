@@ -109,7 +109,7 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 
 			case "ctrl+c", "q":
-				return createExitModel("Exiting..."), tea.Quit
+				return createExitModel("Exiting...")
 
 			case "up", "k":
 				if m.cursor > 0 {
@@ -152,7 +152,7 @@ func (m templateSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 
 			case "ctrl+c", "q":
-				return createExitModel("Exiting..."), tea.Quit
+				return createExitModel("Exiting...")
 
 			case "up":
 				if m.cursor > 0 {

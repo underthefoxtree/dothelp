@@ -67,7 +67,7 @@ func (m singleCommandModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			fmt.Print(clearScreen(), redItemStyle.Render("\u274c An error occured! "), "Exit log:\n\n", string(cmd.buff))
 			os.Exit(1)
 		}
-		return createExitModel(greenItemStyle.Render("\u2705", m.successMsg)), tea.Quit
+		return createExitModel(greenItemStyle.Render("\u2705", m.successMsg))
 
 	default:
 		switch msg := msg.(type) {
@@ -77,7 +77,7 @@ func (m singleCommandModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 
 			case "ctrl+c", "q":
-				return createExitModel("Exiting..."), tea.Quit
+				return createExitModel("Exiting...")
 			}
 		}
 

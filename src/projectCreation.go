@@ -54,7 +54,7 @@ func (m projectCreationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "ctrl+c":
-			return createExitModel("Exiting..."), tea.Quit
+			return createExitModel("Exiting...")
 
 		case "up", "shift+tab", "left":
 			switch m.cursor {
@@ -113,7 +113,7 @@ func (m projectCreationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					exec.Command("dotnet", "new", m.templateId, "-o", dir, "-n", name),
 					greenItemStyle.Render(fmt.Sprintf("Successfully created project %s in %s.", name, dir)))
 			case 3:
-				return createExitModel("Exiting..."), tea.Quit
+				return createExitModel("Exiting...")
 			}
 		}
 	}

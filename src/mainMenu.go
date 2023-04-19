@@ -34,7 +34,7 @@ func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "ctrl+c", "q":
-			return createExitModel("Exiting..."), tea.Quit
+			return createExitModel("Exiting...")
 
 		case "up", "k":
 			if m.cursor > 0 {
@@ -54,10 +54,9 @@ func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return createBuildToolsMainModel(), nil
 			default:
 				return createExitModel(
-						fmt.Sprintf(
-							"You selected: %s",
-							m.getOptionStyle().Render(m.options[m.cursor]))),
-					tea.Quit
+					fmt.Sprintf(
+						"You selected: %s",
+						m.getOptionStyle().Render(m.options[m.cursor])))
 			}
 		}
 	}
