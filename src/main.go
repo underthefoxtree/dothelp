@@ -33,9 +33,29 @@ var (
 
 // * Setup
 func initialModel() tea.Model {
-	return mainMenuModel{
+	return listModel{
 		options: []string{"New Project", "Build Tools", "Exit"},
 		cursor:  0,
+		getOptionStyle: func(option string) lipgloss.Style {
+			if option == "Exit" {
+				return redItemStyle
+			} else {
+				return selectedItemStyle
+			}
+		},
+		selectOption: func(option string) (tea.Model, tea.Cmd) {
+			switch option {
+			case "New Project":
+				return createTemplateSelectModel(), nil
+			case "Build Tools":
+				return createBuildToolsMainModel(), nil
+			default:
+				return createExitModel(
+					fmt.Sprintf(
+						"You selected: %s",
+						selectedItemStyle.Render(option)))
+			}
+		},
 	}
 }
 
