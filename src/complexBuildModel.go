@@ -188,7 +188,11 @@ func (m complexBuildModel) View() string {
 				style = selectedItemStyle
 
 				if choice.otype == 2 {
-					style = redItemStyle
+					if choice.name == "Exit" {
+						style = redItemStyle
+					} else {
+						style = greenItemStyle
+					}
 				}
 			}
 
