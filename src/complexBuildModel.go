@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os/exec"
+
 	"github.com/charmbracelet/bubbles/paginator"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -106,7 +108,23 @@ func (m complexBuildModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, textinput.Blink
 
 				default:
-					return createExitModel("Exiting...")
+					switch m.options[m.cursor+m.paginator.Page*m.paginator.PerPage].name {
+					case "Exit":
+						return createExitModel("Exiting...")
+					case "Confirm":
+						command := []string{"dotnet", "build"}
+						for _, o := range m.options {
+							if o.value != "" {
+								if o.otype == 0 && o.value == "Yes" {
+									command = append(command, o.flag)
+								} else if o.otype == 1 {
+									command = append(append(command, o.flag), o.value)
+								}
+							}
+						}
+
+						return createSingleCommandModel(exec.Command("dotnet", command...), "Build successful.")
+					}
 				}
 			}
 		}
