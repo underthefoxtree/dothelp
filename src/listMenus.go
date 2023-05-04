@@ -31,7 +31,7 @@ func createBuildToolsMainModel() tea.Model {
 			case "Release Build":
 				return createSingleCommandModel(exec.Command("dotnet", "build", "-c", "Release"), "Release build succeeded.")
 			case "Complex Build":
-				return createExitModel("Complex builds aren't yet implemented.")
+				return createComplexBuildModel()
 			default:
 				return createExitModel(
 					fmt.Sprintf(
