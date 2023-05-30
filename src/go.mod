@@ -1,4 +1,4 @@
-module github.com/Skratymir/dothelp
+module github.com/underthefoxtree/dothelp
 
 go 1.20
 
